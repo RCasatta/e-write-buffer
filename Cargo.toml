@@ -1,0 +1,12 @@
+[package]
+name = "e-write-buffer"
+version = "0.1.0"
+authors = ["Riccardo Casatta <riccardo@casatta.it>"]
+edition = "2018"
+license = "MIT"
+description = "A no-std const-generic `Write`able buffer"
+repository = "https://github.com/RCasatta/e-write-buffer"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
