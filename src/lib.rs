@@ -12,6 +12,8 @@
 //! assert_eq!(buffer.as_str().unwrap(), "12");
 //! ```
 
+use core::fmt::{self, Display, Formatter};
+
 /// A write buffer
 #[derive(Debug)]
 pub struct WriteBuffer<const N: usize> {
@@ -64,6 +66,12 @@ impl<const N: usize> core::fmt::Write for WriteBuffer<N> {
     }
 }
 
+impl<const N: usize> Display for WriteBuffer<N> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str().unwrap_or("<not utf8>"))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::WriteBuffer;
@@ -84,16 +92,20 @@ mod test {
 
         buffer.reset();
         let x = 20;
-        write!(
-            buffer,
-            "Longer than {} characters sentence",
-            x
-        )
-            .unwrap_err();
+        write!(buffer, "Longer than {} characters sentence", x).unwrap_err();
 
         buffer.reset();
         write!(buffer, "{}", "1").unwrap();
         write!(buffer, "{}", "2").unwrap();
         assert_eq!(buffer.as_slice(), b"12");
+    }
+
+    #[test]
+    fn test_display() {
+        let x = 123;
+
+        let mut buffer: WriteBuffer<20> = WriteBuffer::new();
+        write!(buffer, "{}", x).unwrap();
+        assert_eq!("123", format!("{}", buffer));
     }
 }
