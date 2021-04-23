@@ -1,3 +1,6 @@
+[![MIT license](https://img.shields.io/github/license/RCasatta/e-write-buffer)](https://github.com/RCasatta/e-write-buffer/blob/master/LICENSE)
+[![Crates](https://img.shields.io/crates/v/e-write-buffer.svg)](https://crates.io/crates/e-write-buffer)
+
 A no-std `Write`able buffer, to use like
 
  ```
