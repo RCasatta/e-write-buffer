@@ -42,6 +42,11 @@ impl<const N: usize> WriteBuffer<N> {
     pub fn as_str(&self) -> Option<&str> {
         core::str::from_utf8(self.as_slice()).ok()
     }
+
+    /// Returns the used bytes in the buffer
+    pub fn len(&self) -> usize {
+        self.offset
+    }
 }
 
 impl<const N: usize> core::fmt::Write for WriteBuffer<N> {
