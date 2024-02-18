@@ -19,7 +19,7 @@
 use core::fmt::{self, Display, Formatter};
 
 /// A write buffer
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WriteBuffer<const N: usize> {
     buffer: [u8; N],
     cursor: usize,
