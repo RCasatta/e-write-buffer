@@ -1,7 +1,9 @@
 #![cfg_attr(not(test), no_std)]
 #![deny(missing_docs)]
 
-//! A no-std `Write`able buffer, to use like
+//! A `no_std`, no allocation, `core::fmt::Write`able buffer.
+//! 
+//! Usage:
 //!
 //! ```
 //! use e_write_buffer::WriteBuffer;

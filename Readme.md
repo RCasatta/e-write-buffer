@@ -1,13 +1,19 @@
 [![MIT license](https://img.shields.io/github/license/RCasatta/e-write-buffer)](https://github.com/RCasatta/e-write-buffer/blob/master/LICENSE)
 [![Crates](https://img.shields.io/crates/v/e-write-buffer.svg)](https://crates.io/crates/e-write-buffer)
+[![Released API docs](https://docs.rs/stm32f1xx-hal/badge.svg)](https://docs.rs/stm32f1xx-hal)
 
-A no-std `Write`able buffer, to use like
+A `no_std`, no allocation, `core::fmt::Write`able buffer.
 
- ```
+Usage:
+
+```rs
 use e_write_buffer::WriteBuffer;
-use std::fmt::Write;
-let mut buffer: WriteBuffer<20> = WriteBuffer::new();
-let x = 12;
-write!(buffer, "{}", x).expect("Can't write");
-assert_eq!(buffer.as_str().unwrap(), "12");
+use std::fmt::Write as _;
+
+fn main() {
+    let mut buffer: WriteBuffer<20> = WriteBuffer::new();
+    let x = 12;
+    write!(buffer, "{}", x).unwrap();
+    assert_eq!(buffer.as_str(), "12");
+}
 ```
