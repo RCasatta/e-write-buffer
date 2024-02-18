@@ -1,6 +1,6 @@
 [![MIT license](https://img.shields.io/github/license/RCasatta/e-write-buffer)](https://github.com/RCasatta/e-write-buffer/blob/master/LICENSE)
 [![Crates](https://img.shields.io/crates/v/e-write-buffer.svg)](https://crates.io/crates/e-write-buffer)
-[![Released API docs](https://docs.rs/stm32f1xx-hal/badge.svg)](https://docs.rs/stm32f1xx-hal)
+[![Released API docs](https://docs.rs/e-write-buffer/badge.svg)](https://docs.rs/e-write-buffer)
 
 A `no_std`, no allocation, `core::fmt::Write`able buffer.
 
