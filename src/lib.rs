@@ -8,8 +8,8 @@
 //! use std::fmt::Write;
 //! let mut buffer: WriteBuffer<20> = WriteBuffer::new();
 //! let x = 12;
-//! write!(buffer, "{}", x).expect("Can't write");
-//! assert_eq!(buffer.as_str().unwrap(), "12");
+//! write!(buffer, "{}", x).unwrap();
+//! assert_eq!(buffer.as_str(), "12");
 //! ```
 
 use core::fmt::{self, Display, Formatter};
@@ -17,55 +17,103 @@ use core::fmt::{self, Display, Formatter};
 /// A write buffer
 #[derive(Debug)]
 pub struct WriteBuffer<const N: usize> {
-    buf: [u8; N],
-    offset: usize,
+    buffer: [u8; N],
+    cursor: usize,
 }
 
 impl<const N: usize> WriteBuffer<N> {
     /// Creates a write buffer
     pub fn new() -> Self {
         let buf = [0u8; N];
-        WriteBuffer { buf, offset: 0 }
+        WriteBuffer {
+            buffer: buf,
+            cursor: 0,
+        }
     }
 
-    /// Returns the valid portion of the buffer as slice
+    /// Returns a slice containing the already written bytes in the buffer
     pub fn as_slice(&self) -> &[u8] {
-        &self.buf[..self.offset]
+        &self.buffer[..self.cursor]
     }
 
-    /// Reset the buffer to be reused
+    /// Returns a mutable slice containing the already written bytes in the
+    /// buffer
+    ///
+    /// Dev Note: This should _not_ be `pub`, since otherwise the user might
+    /// mess with the bytes, violating the guarantee that the safety of
+    /// [`as_str`] and [`as_str_mut`] depend on!
+    fn as_slice_mut(&mut self) -> &mut [u8] {
+        &mut self.buffer[..self.cursor]
+    }
+
+    /// Reset the buffer such that it can be reused.
+    ///
+    /// Note: This does _not_ overwrite any data in memory, it only sets the
+    /// internal cursor back to the start of the buffer.
     pub fn reset(&mut self) {
-        self.offset = 0;
+        self.cursor = 0;
     }
 
-    /// Converts the buffer in `&str`, returnig None if some bytes doesn't resemble valid utf-8
-    pub fn as_str(&self) -> Option<&str> {
-        core::str::from_utf8(self.as_slice()).ok()
+    /// Converts the buffer into `&str`.
+    pub fn as_str(&self) -> &str {
+        // SAFETY: The only way to write into `self.buf` is via
+        // `Write::write_str`. Therefore it is always guaranteed that the buffer
+        // contains valid UTF-8.
+        unsafe { core::str::from_utf8_unchecked(self.as_slice()) }
     }
 
-    /// Returns the used bytes in the buffer
+    /// Converts the buffer into `&mut str`.
+    pub fn as_str_mut(&mut self) -> &mut str {
+        // SAFETY: The only way to write into `self.buf` is via
+        // `Write::write_str`. Therefore it is always guaranteed that the buffer
+        // contains valid UTF-8.
+        unsafe { core::str::from_utf8_unchecked_mut(self.as_slice_mut()) }
+    }
+
+    /// Returns how many bytes in the buffer have already been written.
     pub fn len(&self) -> usize {
-        self.offset
+        self.cursor
+    }
+
+    /// Returns true if zero bytes in the buffer are written.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns how many bytes in the buffer remain for writing.
+    pub fn remaining(&self) -> usize {
+        N - self.len()
+    }
+
+    /// Returns true if the buffer is full.
+    pub fn is_full(&self) -> bool {
+        self.remaining() == 0
     }
 }
 
-impl<const N: usize> core::fmt::Write for WriteBuffer<N> {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+impl<const N: usize> Default for WriteBuffer<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<const N: usize> fmt::Write for WriteBuffer<N> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
         let bytes = s.as_bytes();
 
-        // Skip over already-copied data
-        let remainder = &mut self.buf[self.offset..];
-        // Check if there is space remaining (return error instead of panicking)
-        if remainder.len() < bytes.len() {
-            return Err(core::fmt::Error);
-        }
-        // Make the two slices the same length
-        let remainder = &mut remainder[..bytes.len()];
-        // Copy
-        remainder.copy_from_slice(bytes);
+        // New cursor after write
+        let new_cursor = self.cursor + bytes.len();
 
-        // Update offset to avoid overwriting
-        self.offset += bytes.len();
+        // If we would exceed the capacity of the buffer, we fail
+        if new_cursor > N {
+            return Err(fmt::Error);
+        }
+
+        // Efficiently copy the bytes into the bufffer
+        self.buffer[self.cursor..new_cursor].copy_from_slice(bytes);
+
+        // Update the cursor
+        self.cursor = new_cursor;
 
         Ok(())
     }
@@ -73,7 +121,7 @@ impl<const N: usize> core::fmt::Write for WriteBuffer<N> {
 
 impl<const N: usize> Display for WriteBuffer<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.as_str().unwrap_or("<not utf8>"))
+        write!(f, "{}", self.as_str())
     }
 }
 
@@ -112,5 +160,23 @@ mod test {
         let mut buffer: WriteBuffer<20> = WriteBuffer::new();
         write!(buffer, "{}", x).unwrap();
         assert_eq!("123", format!("{}", buffer));
+    }
+
+    #[test]
+    fn test_as_str_mut() {
+        let mut buffer: WriteBuffer<20> = WriteBuffer::new();
+        write!(buffer, "hello world").unwrap();
+        buffer.as_str_mut().make_ascii_uppercase();
+
+        assert_eq!(buffer.as_str(), "HELLO WORLD");
+    }
+
+    #[test]
+    fn test_is_empty_is_full_and_overflow() {
+        let mut buffer: WriteBuffer<10> = WriteBuffer::new();
+        assert!(buffer.is_empty());
+        write!(buffer, "0123456789").unwrap();
+        assert!(buffer.is_full());
+        assert_eq!(write!(buffer, "!"), Err(core::fmt::Error));
     }
 }
