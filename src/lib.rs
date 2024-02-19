@@ -2,13 +2,13 @@
 #![deny(missing_docs)]
 
 //! A `no_std`, no allocation, `core::fmt::Write`able buffer.
-//! 
+//!
 //! Usage:
 //!
 //! ```rs
 //! use e_write_buffer::WriteBuffer;
 //! use std::fmt::Write as _;
-//! 
+//!
 //! fn main() {
 //!     let mut buffer: WriteBuffer<20> = WriteBuffer::new();
 //!     let x = 12;
@@ -19,7 +19,7 @@
 use core::fmt::{self, Display, Formatter};
 
 /// A write buffer
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy)]
 pub struct WriteBuffer<const N: usize> {
     buffer: [u8; N],
     cursor: usize,
@@ -100,6 +100,20 @@ impl<const N: usize> Default for WriteBuffer<N> {
         Self::new()
     }
 }
+
+impl<const N: usize> PartialEq for WriteBuffer<N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl<const N: usize> core::hash::Hash for WriteBuffer<N> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
+    }
+}
+
+impl<const N: usize> Eq for WriteBuffer<N> {}
 
 impl<const N: usize> fmt::Write for WriteBuffer<N> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
