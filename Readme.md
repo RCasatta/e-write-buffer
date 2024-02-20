@@ -17,3 +17,6 @@ fn main() {
     assert_eq!(buffer.as_str(), "12");
 }
 ```
+
+See also [`heapless::String`](https://docs.rs/heapless/latest/heapless/struct.String.html) as an alternative.
+
