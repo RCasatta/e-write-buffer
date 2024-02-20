@@ -1,10 +1,10 @@
 [package]
 name = "e-write-buffer"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Riccardo Casatta <riccardo@casatta.it>"]
 edition = "2018"
 license = "MIT"
-description = "A no_std const-generic `Write`able buffer"
+description = "A no_std, const-generic, `core::fmt::Write`able buffer"
 repository = "https://github.com/RCasatta/e-write-buffer"
 documentation = "https://docs.rs/e-write-buffer"
 keywords = ["write", "buffer", "embedded", "no_std", "const-generics"]
